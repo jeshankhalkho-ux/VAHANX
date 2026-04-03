@@ -1,39 +1,65 @@
 import requests
-from bs4 import BeautifulSoup
-import re
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+API_KEY = "TBEH-API-KEY-2024"
+BASE_URL = "https://api.vehicleinfo.com/v1"
+
 HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/138.0.0.0 Mobile Safari/537.36"
-    ),
-    "Referer": "https://vahanx.in/",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
+    "x-api-key": API_KEY,
+    "Accept": "application/json"
 }
 
 # ===============================================
-# SCRAPER
+# ROUTES
 # ===============================================
-def get_vehicle_details(rc_number: str) -> dict:
-    rc = rc_number.strip().upper()
-    url = f"https://vahanx.in/rc-search/{rc}"
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "service": "Vehicle RC Lookup API",
+        "status": "online",
+        "endpoint": "/api/rc?number=DL01AB1234"
+    })
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "healthy"})
+
+@app.route("/api/rc", methods=["GET"])
+def vehicle_lookup():
+    number = request.args.get("number", "").strip().upper()
+
+    if not number:
+        return jsonify({
+            "error": "Missing parameter",
+            "usage": "/api/rc?number=DL01AB1234"
+        }), 400
 
     try:
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
-    except Exception as e:
-        return {"error": f"Failed to fetch data: {str(e)}"}
+        response = requests.get(
+            f"{BASE_URL}/{number}",
+            headers=HEADERS,
+            timeout=10
+        )
+        data = response.json()
+        return jsonify({
+            "success": True,
+            "data": data
+        }), 200
 
-    def extract_card(label):
-        for div in soup.select(".hrcd-cardbody"):
-            span = div.find("span")
-            if span and label.lower() in span.text.lower():
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+# ===============================================
+# RUN
+# ===============================================
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=False)
                 p = div.find("p")
                 return p.get_text(strip=True) if p else None
         return None
