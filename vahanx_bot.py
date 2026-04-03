@@ -7,7 +7,7 @@ import re
 # ===============================================
 # CONFIG — token read from environment variable
 # ===============================================
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8564946786:AAF4e7itEyIZozp2xgBh5geeJAU4kCtWwbM)
 bot = telebot.TeleBot(BOT_TOKEN)
 
 HEADERS = {
